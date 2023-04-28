@@ -16,9 +16,56 @@ func main() {
 	PrintBoard(&board)
 
 	for _, mv := range GetLegalMoves(BLACK, &board) {
-		fmt.Println(FormatMove(mv))
+		fmt.Println(FormatMove(mv), mv.First, mv.Second)
 	}
 
+	changed := MakeMove(BLACK, &board, Pair[int, int]{5, 3})
+	PrintBoard(&changed)
+}
+
+func MakeMove(playColor int, board_original *[8][8]int, move Pair[int, int]) [8][8]int {
+	board := *board_original
+	offsets := []Pair[int, int] {
+		{-1, -1},{-1,  0}, {-1,  1},
+		{ 0, -1},          { 0,  1},
+		{ 1, -1},{ 1,  0}, { 1,  1},
+	}
+
+	board[move.First][move.Second] = playColor
+
+	for _, attackDir := range offsets {
+		cellRow := move.First
+		cellCol := move.Second
+
+		toChange := []Pair[int, int] {}
+
+		for {
+			cellRow += attackDir.First
+			cellCol += attackDir.Second
+
+			if cellRow > 7  || cellRow < 0 || cellCol > 7 || cellCol < 0 {
+				toChange = nil
+				break
+			}
+
+			cell := board_original[cellRow][cellCol]
+
+			if cell == EMPTY  {
+				toChange = nil
+				break
+			} else if cell == playColor {
+				break
+			} else {
+				toChange = append(toChange, Pair[int, int]{cellRow, cellCol})
+			}
+		}
+
+		for _, changedCell := range toChange {
+			board[changedCell.First][changedCell.Second] = playColor
+		}
+	}
+
+	return board
 }
 
 func GetLegalMoves(playColor int, board *[8][8]int)  []Pair[int, int] {
@@ -43,7 +90,7 @@ func GetLegalMoves(playColor int, board *[8][8]int)  []Pair[int, int] {
 				neighRow := rowI + attackDir.First
 				neighCol := colI + attackDir.Second
 
-				if ( neighRow > 7  || neighRow < 0 || neighCol > 7 || neighCol < 0 ) {
+				if neighRow > 7  || neighRow < 0 || neighCol > 7 || neighCol < 0 {
 					continue // neighbour out of bounds
 				}
 
