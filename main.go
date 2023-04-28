@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -25,7 +24,7 @@ func main() {
 func GetLegalMoves(playColor int, board *[8][8]int)  []Pair[int, int] {
 	offsets := []Pair[int, int] {
 		{-1, -1},{-1,  0}, {-1,  1},
-		{ 0, -1},{ 0,  0}, { 0,  1},
+		{ 0, -1},          { 0,  1},
 		{ 1, -1},{ 1,  0}, { 1,  1},
 	}
 
@@ -36,7 +35,7 @@ func GetLegalMoves(playColor int, board *[8][8]int)  []Pair[int, int] {
 			cellValue := board[rowI][colI]
 
 			// This cell is occupied by other palyer or empty, so don't count moves for it
-			if (cellValue != playColor) {
+			if cellValue != playColor {
 				continue
 			}
 
@@ -54,22 +53,23 @@ func GetLegalMoves(playColor int, board *[8][8]int)  []Pair[int, int] {
 					continue // no friendly fire, no attacking air
 				}
 
+				nextFreeRow := neighRow
+				nextFreeCol := neighCol
+				for {
+					nextFreeRow += attackDir.First
+					nextFreeCol += attackDir.Second
 
+					if nextFreeRow > 7  || nextFreeRow < 0 || nextFreeCol > 7 || nextFreeCol < 0 {
+						break // out of bounds direction
+					}
 
-				nextFreeRow := rowI + (attackDir.First * 2)
-				nextFreeCol := colI + (attackDir.Second * 2)
+					targetCell := board[nextFreeRow][nextFreeCol]
 
-				if ( nextFreeRow > 7  || nextFreeRow < 0 || nextFreeCol > 7 || nextFreeCol < 0 ) {
-					continue // out of bounds direction
+					if targetCell == EMPTY {
+						moves = append(moves, Pair[int, int]{nextFreeRow, nextFreeCol})
+						break
+					}
 				}
-
-				targetCell := board[rowI][colI]
-
-				if ( targetCell == EMPTY ) {
-					continue // stones can be placed only on empty squares
-				}
-
-				moves = append(moves, Pair[int, int]{nextFreeRow, nextFreeCol})
 			}
 
 		}
@@ -87,6 +87,8 @@ func InitGame() [8][8]int {
 	}
 	board[Row(5)][Col('d')] = WHITE
 	board[Row(5)][Col('e')] = BLACK
+
+	board[Row(5)][Col('c')] = WHITE
 
 	board[Row(4)][Col('d')] = BLACK
 	board[Row(4)][Col('e')] = WHITE
@@ -111,8 +113,10 @@ func PrintBoard(board *[8][8]int) {
 		for _, cell := range row {
 			if cell == EMPTY {
 				fmt.Print(center(" ", 3))
+			} else if cell == WHITE {
+				fmt.Print(" W ")
 			} else {
-				fmt.Print(center(strconv.Itoa(cell), 3))
+				fmt.Print(" B ")
 			}
 
 			fmt.Print("|")
