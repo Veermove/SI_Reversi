@@ -123,8 +123,6 @@ func InitGame() [8][8]int {
 	board[Row(5)][Col('d')] = WHITE
 	board[Row(5)][Col('e')] = BLACK
 
-	board[Row(5)][Col('c')] = WHITE
-
 	board[Row(4)][Col('d')] = BLACK
 	board[Row(4)][Col('e')] = WHITE
 
