@@ -22,10 +22,10 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator) int {
 
 		// black turn
 		blackLegalMoves := GetLegalMoves(BLACK, &board)
+		blackMove := blackPlayer(&board, BLACK)
+		blackHasMove := len(blackLegalMoves) != 0 && blackMove != (Pair[int, int]{ 0, 0 })
 
-		if len(blackLegalMoves) != 0 {
-			blackMove := blackPlayer(&board, BLACK)
-
+		if blackHasMove {
 			if !slices.Contains(blackLegalMoves, blackMove) {
 				fmt.Println("This black move is not legal.", blackMove)
 				os.Exit(1)
@@ -38,11 +38,14 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator) int {
 		PrintBoard(&board)
 		fmt.Print("\n")
 
+
 		// white turn
 		whiteLegalMoves := GetLegalMoves(WHITE, &board)
+		whiteMove := whitePlayer(&board, WHITE)
+		whiteHasMove := len(whiteLegalMoves) != 0 && whiteMove != (Pair[int, int]{ 0, 0 })
 
-		if len(whiteLegalMoves) != 0 {
-			whiteMove := whitePlayer(&board, WHITE)
+
+		if whiteHasMove {
 
 			if !slices.Contains(whiteLegalMoves, whiteMove) {
 				fmt.Println("This white move is not legal.", whiteMove)
@@ -52,7 +55,7 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator) int {
 			board = MakeMove(WHITE, &board, whiteMove)
 		}
 
-		if len(whiteLegalMoves) == 0 && len(blackLegalMoves) == 0 {
+		if !blackHasMove && !whiteHasMove  {
 			break // game ends when no player can make legal move
 		}
 

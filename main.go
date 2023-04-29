@@ -1,5 +1,5 @@
 package main
 
 func main() {
-	StartGame(RandomPlayer, BestPlayer(3))
+	StartGame(RandomPlayer, BestPlayer(6))
 }
