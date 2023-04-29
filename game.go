@@ -20,21 +20,23 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator) int {
 
 		PrintBoard(&board)
 
-		// black turny
+		// black turn
 		blackLegalMoves := GetLegalMoves(BLACK, &board)
 
 		if len(blackLegalMoves) != 0 {
 			blackMove := blackPlayer(&board, BLACK)
 
 			if !slices.Contains(blackLegalMoves, blackMove) {
-				fmt.Println("This move is not legal.")
+				fmt.Println("This black move is not legal.", blackMove)
 				os.Exit(1)
 			}
 
 			board = MakeMove(BLACK, &board, blackMove)
 		}
 
+		fmt.Print("\n")
 		PrintBoard(&board)
+		fmt.Print("\n")
 
 		// white turn
 		whiteLegalMoves := GetLegalMoves(WHITE, &board)
@@ -43,7 +45,7 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator) int {
 			whiteMove := whitePlayer(&board, WHITE)
 
 			if !slices.Contains(whiteLegalMoves, whiteMove) {
-				fmt.Println("This move is not legal.")
+				fmt.Println("This white move is not legal.", whiteMove)
 				os.Exit(1)
 			}
 
