@@ -12,9 +12,15 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+type cache map[bool]map[[8][8]int]float64
+
 func BestPlayer(maxDepth int) moveGenerator {
+	cache := make(cache)
+	cache[true]  = make(map[[8][8]int]float64)
+	cache[false] = make(map[[8][8]int]float64)
+
 	return func(board *[8][8]int, color int) Pair[int, int] {
-		return FindBestMove(board, color, maxDepth)
+		return FindBestMove(board, color, maxDepth, cache)
 	}
 }
 
@@ -36,9 +42,17 @@ func evaluateStatic(board *[8][8]int) float64 {
 }
 
 
-func minmax(board *[8][8]int, depth int, maximazingPlayer bool, alpha float64, beta float64) float64 {
+func minmax(cache cache, board *[8][8]int, depth int, maximazingPlayer bool, alpha float64, beta float64) float64 {
+	erl, exists := cache[maximazingPlayer][*board]
+
+	if exists {
+		return erl
+	}
+
 	if depth == 0 {
-		return evaluateStatic(board)
+		ev := evaluateStatic(board)
+		cache[maximazingPlayer][*board] = ev
+		return ev
 	}
 
 
@@ -46,7 +60,7 @@ func minmax(board *[8][8]int, depth int, maximazingPlayer bool, alpha float64, b
 		value := -math.MaxFloat64
 		for _, move := range GetLegalMoves(BLACK, board) {
 			childBoard := MakeMove(BLACK, board, move)
-			value = math.Max(value, minmax(&childBoard, depth - 1, false, alpha, beta))
+			value = math.Max(value, minmax(cache, &childBoard, depth - 1, false, alpha, beta))
 			if value > beta {
 				break
 			}
@@ -57,7 +71,7 @@ func minmax(board *[8][8]int, depth int, maximazingPlayer bool, alpha float64, b
 		value := math.MaxFloat64
 		for _, move := range GetLegalMoves(WHITE, board) {
 			childBoard := MakeMove(WHITE, board, move)
-			value = math.Min(value, minmax(&childBoard, depth - 1, true, alpha, beta))
+			value = math.Min(value, minmax(cache, &childBoard, depth - 1, true, alpha, beta))
 			if value < alpha {
 				break
 			}
@@ -67,14 +81,14 @@ func minmax(board *[8][8]int, depth int, maximazingPlayer bool, alpha float64, b
 	}
 }
 
-func FindBestMove(board *[8][8]int, color int, depth int) Pair[int, int] {
+func FindBestMove(board *[8][8]int, color int, depth int, cache cache) Pair[int, int] {
 	var bestMove Pair[int, int]
 	if color == BLACK {
 		value := -math.MaxFloat64
 
 		for _, move := range GetLegalMoves(BLACK, board) {
 			childBoard := MakeMove(BLACK, board, move)
-			eval := minmax(&childBoard, depth - 1, false, -math.MaxFloat64, math.MaxFloat64)
+			eval := minmax(cache, &childBoard, depth - 1, false, -math.MaxFloat64, math.MaxFloat64)
 			if value < eval {
 				value = eval
 				bestMove = move
@@ -84,7 +98,7 @@ func FindBestMove(board *[8][8]int, color int, depth int) Pair[int, int] {
 		value := math.MaxFloat64
 		for _, move := range GetLegalMoves(WHITE, board) {
 			childBoard := MakeMove(WHITE, board, move)
-			eval := minmax(&childBoard, depth - 1, true, -math.MaxFloat64, math.MaxFloat64)
+			eval := minmax(cache, &childBoard, depth - 1, true, -math.MaxFloat64, math.MaxFloat64)
 			if value > eval {
 				value = eval
 				bestMove = move
