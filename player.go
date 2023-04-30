@@ -28,17 +28,66 @@ func evaluateStatic(board *[8][8]int) float64 {
 	whiteStones := 0
 	blackStones := 0
 
+	cornersWhite := 0
+	cornersBlack := 0
+
+	edgesWhite := 0
+	edgesBlack := 0
+
+	keyWhite := 0
+	keyBlack := 0
+
 	for rowI := 0; rowI < 8; rowI++ {
 		for colI := 0; colI < 8; colI++ {
 			if board[rowI][colI] == BLACK {
+
+				//Edges control
+				if rowI == 0 || rowI == 7 || colI == 7 || colI == 0 {
+					edgesBlack++
+
+					// Corner control
+					if (rowI == 0 && colI == 0) || (rowI == 7 && colI == 0) || (rowI == 0 && colI == 7) || (rowI == 7 && colI == 7) {
+						cornersBlack++
+					}
+				}
+
+
+				// KeySquares
+				if (rowI == 3 && colI == 3) || (rowI == 3 && colI == 4) || (rowI == 4 && colI == 3) || (rowI == 4 && colI == 4) {
+					keyBlack++
+				}
+
 				blackStones++
 			} else if board[rowI][colI] == WHITE {
+
+				if rowI == 0 || rowI == 7 || colI == 7 || colI == 0 {
+					edgesWhite++
+
+					// Corner control
+					if (rowI == 0 && colI == 0) || (rowI == 7 && colI == 0) || (rowI == 0 && colI == 7) || (rowI == 7 && colI == 7) {
+						cornersWhite++
+					}
+				}
+
+				// KeySquares
+				if (rowI == 3 && colI == 3) || (rowI == 3 && colI == 4) || (rowI == 4 && colI == 3) || (rowI == 4 && colI == 4) {
+					keyWhite++
+				}
+
 				whiteStones++
 			}
 		}
 	}
 
-	return float64(blackStones - whiteStones)
+	stonesDiff := blackStones - whiteStones
+	movesDiff := len(GetLegalMoves(BLACK, board)) - len(GetLegalMoves(WHITE, board))
+	edgesDiff := edgesBlack - edgesWhite
+	cornersDiff := cornersBlack - cornersWhite
+	keySqaresDiff := keyBlack - keyWhite
+
+	return float64(
+		movesDiff * 4 + edgesDiff * 4 + cornersDiff * 5 + keySqaresDiff * 5 + stonesDiff,
+	)
 }
 
 
