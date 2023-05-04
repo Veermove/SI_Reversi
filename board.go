@@ -14,9 +14,9 @@ const (
 func MakeMove(playColor int, board_original *[8][8]int, move Pair[int, int]) [8][8]int {
 	board := *board_original
 	offsets := []Pair[int, int] {
-		{-1, -1},{-1,  0}, {-1,  1},
-		{ 0, -1},          { 0,  1},
-		{ 1, -1},{ 1,  0}, { 1,  1},
+		{-1, -1}, {-1,  0}, {-1,  1},
+		{ 0, -1},           { 0,  1},
+		{ 1, -1}, { 1,  0}, { 1,  1},
 	}
 
 	board[move.First][move.Second] = playColor
@@ -58,9 +58,9 @@ func MakeMove(playColor int, board_original *[8][8]int, move Pair[int, int]) [8]
 
 func GetLegalMoves(playColor int, board *[8][8]int)  []Pair[int, int] {
 	offsets := []Pair[int, int] {
-		{-1, -1},{-1,  0}, {-1,  1},
-		{ 0, -1},          { 0,  1},
-		{ 1, -1},{ 1,  0}, { 1,  1},
+		{-1, -1}, {-1,  0}, {-1,  1},
+		{ 0, -1},           { 0,  1},
+		{ 1, -1}, { 1,  0}, { 1,  1},
 	}
 
 	moves := []Pair[int, int] {}
