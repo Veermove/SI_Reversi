@@ -13,6 +13,7 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator, quiet bool)
 
 	board := InitGame()
 	turn := 0
+	w := [5]float64 {4, 4, 5, 5, 1}
 
 	if !quiet { fmt.Println("Starting game.") }
 
@@ -20,6 +21,9 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator, quiet bool)
 		if !quiet { fmt.Println("Turn:", turn) }
 
 		if !quiet { PrintBoard(&board) }
+		if !quiet {
+			fmt.Println("Eval: ", EvaluateStatic(&board, &w))
+		}
 
 		// black turn
 		blackLegalMoves := GetLegalMoves(BLACK, &board)
@@ -39,6 +43,9 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator, quiet bool)
 			fmt.Print("\n")
 			PrintBoard(&board)
 			fmt.Print("\n")
+			fmt.Println("Eval: ", EvaluateStatic(&board, &w))
+
+
 		}
 
 		// white turn

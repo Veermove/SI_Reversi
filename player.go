@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"golang.org/x/exp/slices"
@@ -28,7 +29,7 @@ func BestPlayer(maxDepth int, weights *[5]float64) moveGenerator {
 	}
 }
 
-func evaluateStatic(board *[8][8]int, weights *[5]float64) float64 {
+func EvaluateStatic(board *[8][8]int, weights *[5]float64) float64 {
 	whiteStones := 0
 	blackStones := 0
 
@@ -95,16 +96,21 @@ func evaluateStatic(board *[8][8]int, weights *[5]float64) float64 {
 }
 
 
-func minmax(cache cache, board *[8][8]int, depth int, maximazingPlayer bool, alpha float64, beta float64, weights *[5]float64) float64 {
+func minmax(mutex *sync.RWMutex, cache cache, board *[8][8]int, depth int, maximazingPlayer bool, alpha float64, beta float64, weights *[5]float64) float64 {
+	mutex.RLock()
 	erl, exists := cache[maximazingPlayer][*board]
+	mutex.RUnlock()
 
 	if exists {
 		return erl
 	}
 
 	if depth == 0 {
-		ev := evaluateStatic(board, weights)
+
+		ev := EvaluateStatic(board, weights)
+		mutex.Lock()
 		cache[maximazingPlayer][*board] = ev
+		mutex.Unlock()
 		return ev
 	}
 
@@ -113,7 +119,7 @@ func minmax(cache cache, board *[8][8]int, depth int, maximazingPlayer bool, alp
 		value := -math.MaxFloat64
 		for _, move := range GetLegalMoves(BLACK, board) {
 			childBoard := MakeMove(BLACK, board, move)
-			value = math.Max(value, minmax(cache, &childBoard, depth - 1, false, alpha, beta, weights))
+			value = math.Max(value, minmax(mutex, cache, &childBoard, depth - 1, false, alpha, beta, weights))
 			if value > beta {
 				break
 			}
@@ -124,7 +130,7 @@ func minmax(cache cache, board *[8][8]int, depth int, maximazingPlayer bool, alp
 		value := math.MaxFloat64
 		for _, move := range GetLegalMoves(WHITE, board) {
 			childBoard := MakeMove(WHITE, board, move)
-			value = math.Min(value, minmax(cache, &childBoard, depth - 1, true, alpha, beta, weights))
+			value = math.Min(value, minmax(mutex, cache, &childBoard, depth - 1, true, alpha, beta, weights))
 			if value < alpha {
 				break
 			}
@@ -136,23 +142,49 @@ func minmax(cache cache, board *[8][8]int, depth int, maximazingPlayer bool, alp
 
 func FindBestMove(board *[8][8]int, color int, turn int, depth int, cache cache, weights *[5]float64) Pair[int, int] {
 	var bestMove Pair[int, int]
+	var results chan Pair[float64, Pair[int, int]]
+
+	eval := func(color int, legalMoves []Pair[int, int], results chan <- Pair[float64, Pair[int, int]]) {
+		defer close(results)
+
+		mutex := &sync.RWMutex{}
+		var wg sync.WaitGroup
+
+		for _, lMove := range legalMoves {
+			wg.Add(1)
+			go func(move Pair[int, int]) {
+				defer wg.Done()
+				childBoard := MakeMove(color, board, move)
+				eval := minmax(mutex, cache, &childBoard, depth - 1, color == WHITE, -math.MaxFloat64, math.MaxFloat64, weights)
+				results <- Pair[float64, Pair[int, int]] {eval, move}
+			} (lMove)
+		}
+
+		wg.Wait()
+	}
+
 	if color == BLACK {
 		value := -math.MaxFloat64
-
-		for _, move := range GetLegalMoves(BLACK, board) {
-			childBoard := MakeMove(BLACK, board, move)
-			eval := minmax(cache, &childBoard, depth - 1, false, -math.MaxFloat64, math.MaxFloat64, weights)
+		legaMoves := GetLegalMoves(color, board)
+		results = make(chan Pair[float64, Pair[int, int]], len(legaMoves))
+		eval(BLACK, legaMoves, results)
+		for evalAndMove := range results {
+			eval := evalAndMove.First
+			move := evalAndMove.Second
 			if value < eval {
 				value = eval
 				bestMove = move
 			}
 		}
+
 	} else {
 		value := math.MaxFloat64
-
-		for _, move := range GetLegalMoves(WHITE, board) {
-			childBoard := MakeMove(WHITE, board, move)
-			eval := minmax(cache, &childBoard, depth - 1, true, -math.MaxFloat64, math.MaxFloat64, weights)
+		legaMoves := GetLegalMoves(color, board)
+		results = make(chan Pair[float64, Pair[int, int]], len(legaMoves))
+		eval(WHITE, legaMoves, results)
+		for evalAndMove := range results {
+			eval := evalAndMove.First
+			move := evalAndMove.Second
 			if value > eval {
 				value = eval
 				bestMove = move
