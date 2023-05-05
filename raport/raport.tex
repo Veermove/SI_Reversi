@@ -1,0 +1,66 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{lipsum}
+
+% Set page size and margins
+% Replace `letterpaper' with`a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{Sztuczna inteligencja i inżynieria wiedzy, \\ Lista 2}
+\author{Tymoteusz Trętowicz, 260451}
+\date{}
+
+\begin{document}
+\maketitle
+\pagebreak
+\section{Implementacja}
+Gra Reversi jest grą planszową, w której gracze wykonują ruchy na zmiane kładąc dyski swojego koloru na planszy w stylu siatki rozmiarów 8 na 8 dysków. Zwyczajowo zaczyna gracz grający dyskami koloru ciemnego. Gracze mogą kłaść dyski na planszy w taki sposób, żeby powstała linia zaczynała się i kończyła się od dysków gracza wykonującego ruch. Wówczas wszystkie dyski pomiędzy dwoma granicznymi dyskami są obracna, tak żeby były koloru gracza wykonującego ruch. Gra kończy się w momencie gdy żaden z graczy nie może wykonać legalnego ruchu. Wygrywa gracz, który ostatecznie ma na planszy więcej dysków swojego koloru.
+
+Implementacja w języku Go opiera się na dwuwymiarowej tablicy liczb całkowitych. Puste pola są reprezentowane liczbą -1, pola białe liczbą 0, a pola czarne liczbą 1. Ruchy są reprezentowane jako para para liczb (wiersz i kolumna) oraz kolor dysków gracza wykonującego ruch.
+
+W retrospekcji wygodniejszym rozwiązaniem byłoby przypisanie koloru białego do liczby -1, a pól pustych do liczby 0. Wówczas: $$K_{\text{CZARNY}} = -K_{\text{BIAŁY}}$$.
+
+Funkcja
+$$\text{\texttt{StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator)}} \rightarrow \text{\texttt{WinnerColor}}$$
+akceptuje dwa paramtery, które reprezentują graczy. Typ \texttt{moveGenerator} ma sygnaturę:
+$$ \texttt{moveGenerator: } f(\texttt{*[8][8]int}, \texttt{int}, \texttt{int}) \rightarrow (\texttt{int}, \texttt{int})$$
+Czyli jest to funkcja, akceptująca jako paramter wskaźnik na planszę, kolor gracza wykonującego ruch i numer ruchu oraz zwracająca pare liczb, reprezentujących wygenerowany ruch. W implementacji dostarczene są 3 rodzaje graczy: \begin{enumerate}
+    \item \texttt{StdinPlayer} - gracz wczytujący ruchy ze standardowego wejścia.
+    \item \texttt{RandomPlayer} - gracz wykonujący ruchy losowe.
+    \item \texttt{BestPlayer} - gracz szukający ruchów do podanej głębokiści i wykonujący najlpesze wg. heurystyk ruchy.
+\end{enumerate}
+
+\subsection*{Heurystyki}
+Do oceny danej pozycji na planszy wykorzystane są następujące heurystyki: \begin{itemize}
+    \item Położonych dysków - preferowane są pozycje, w których dany gracz ma na planszy więcej dysków.
+    \item Legalnych ruchów - preferowane są pozycje, w których gracz ma większy wybór ruchów.
+    \item Kluczowych pól - preferowane są pozycje, w których gracz ma zajęte pola kluczowe: D4, E4, D5, E5.
+    \item Rogów - preferowane są pozycje, w których gracz kontroluje rogi planszy, tj. pola: A1, A8, H1, H8.
+    \item Krawędzi - preferowane są pozycje, w których gracz kontroluje krawędzie planszy, czyli pola z kolumn A i H oraz z rzędów 1 oraz 8.
+\end{itemize}
+
+Zatem ostatecznie ocena pozycji jest liczona jako:
+\begin{align*}
+    &E = H_1 w_1 + H_2 w_2 + H_3 w_3 + H_4 w_4 + H_5 w_5\\
+    &H_1 = \text{Liczba czarnych pól} - \text{Liczba białych pól}\\
+    &H_2 = \text{Liczba legalnych ruchów gracza czarnego} - \text{Liczba legalnych ruchów gracza białego}\\
+    &H_3 = \text{Liczba kluchowych pól gracza czarnego} - \text{Liczba kluchowych pól gracza białego}\\
+    &H_4 = \text{Liczba rogów gracza czarnego} - \text{Liczba rogów gracza białego}\\
+    &H_5 = \text{Liczba krawędzi gracza czarnego} - \text{Liczba krawędzi gracza białego}\\
+\end{align*}
+gdzie $w_i$ waga odpowiedniej heurystyki.
+
+Ta implementacja nie uwzględnia, tego kto właśnie wykonał ruch. To powoduje, że może być oceniania pozycja w której gracze nie wykonali takiej samej liczby ruchów.
+
+Wagi heurystyk są wyznaczone eksperymentalnie (odpowiednio $W =w_1\cdots w_5: 1, 4, 4, 5, 5$) lub poprzez algorytm genetyczny, który dla ustalonej liczby generacji oraz populacji w generacji ustala wagi. Wagi początkowo są ustalone na 1. Następnie dla każdego osobnika w populacji, każda waga jest zmieniana poprzez wymnożenie jej przez losową liczbę z przedziału $0.5\cdots1.5$. Nastepnie osobnika odbywa grę z przeciwnikiem (również uczniem algorytmu genetycznego). Jeżeli osobnik przegra, jego wagi są zapominane. W celu obliczenia wag nastepnej generacji jest brana średnia z wag zwycięzców oraz wagi na początku generacji, oraz jest normalizowana tak by: $\sum^{5}_{i=1}w_i = 5$.
+\end{document}
