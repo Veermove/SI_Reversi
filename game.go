@@ -28,7 +28,7 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator, quiet bool)
 		// black turn
 		blackLegalMoves := GetLegalMoves(BLACK, &board)
 		blackMove := blackPlayer(&board, BLACK, turn)
-		blackHasMove := len(blackLegalMoves) != 0 && blackMove != (Pair[int, int]{ 0, 0 })
+		blackHasMove := len(blackLegalMoves) != 0 && blackMove != (Pair[int, int]{ -1, -1 })
 
 		if blackHasMove {
 			if !slices.Contains(blackLegalMoves, blackMove) {
@@ -51,7 +51,7 @@ func StartGame(whitePlayer moveGenerator, blackPlayer moveGenerator, quiet bool)
 		// white turn
 		whiteLegalMoves := GetLegalMoves(WHITE, &board)
 		whiteMove := whitePlayer(&board, WHITE, turn)
-		whiteHasMove := len(whiteLegalMoves) != 0 && whiteMove != (Pair[int, int]{ 0, 0 })
+		whiteHasMove := len(whiteLegalMoves) != 0 && whiteMove != (Pair[int, int]{ -1, -1 })
 
 
 		if whiteHasMove {

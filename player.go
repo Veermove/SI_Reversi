@@ -141,7 +141,7 @@ func minmax(mutex *sync.RWMutex, cache cache, board *[8][8]int, depth int, maxim
 }
 
 func FindBestMove(board *[8][8]int, color int, turn int, depth int, cache cache, weights *[5]float64) Pair[int, int] {
-	var bestMove Pair[int, int]
+	bestMove := Pair[int, int]{-1, -1}
 	var results chan Pair[float64, Pair[int, int]]
 
 	eval := func(color int, legalMoves []Pair[int, int], results chan <- Pair[float64, Pair[int, int]]) {
